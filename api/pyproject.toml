@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atk-logic"
+version = "0.1.0"
+description = "Cross-platform (Windows/Linux) API + CLI for the ATK-Logic (ALIENTEK DL16) logic analyzer"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "GPL-3.0-or-later" }
+dependencies = [
+    "libusb1>=3.0",
+    "numpy>=1.20",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+atk-logic = "atk_logic.cli:main"
+
+[tool.setuptools]
+packages = ["atk_logic"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
