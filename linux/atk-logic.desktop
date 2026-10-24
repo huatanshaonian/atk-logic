@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ATK-Logic
+Comment=ALIENTEK logic analyzer
+Comment[zh_CN]=正点原子逻辑分析仪上位机
+Exec=/opt/ATK-Logic/ATK-Logic %f
+Icon=atk-logic
+Terminal=false
+Categories=Development;Electronics;
