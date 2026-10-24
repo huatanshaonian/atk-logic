@@ -1,6 +1,7 @@
 ﻿#include "frameless_window.h"
 
 #ifdef Q_OS_LINUX
+#include <QDesktopServices>
 #include <X11/Xlib.h>
 #include <QX11Info>
 #endif
@@ -411,8 +412,8 @@ bool FramelessWindow::openDataResources()
         return system(cmd.toStdString().c_str())==0;
 #endif
 #ifdef Q_OS_LINUX
-        QString cmd= QString("evince "+path);
-        return system(cmd.toStdString().c_str())==0;
+        // 交给桌面环境默认的 PDF 阅读器（xdg-open），不阻塞界面
+        return QDesktopServices::openUrl(QUrl::fromLocalFile(path));
 #endif
 
     }
@@ -1138,11 +1139,19 @@ void FramelessWindow::mouseMoveEvent(QMouseEvent *event)
         if (m_currentArea == Move) {
 
 #ifdef Q_OS_LINUX
+            Display *display = QX11Info::isPlatformX11() ? QX11Info::display() : nullptr;
+            if (display == nullptr) {
+                // 非 X11（如原生 Wayland）时退回到普通的窗口移动
+                setPosition(m_oldPos - m_startPos + event->globalPos());
+                if (m_windowState == Qt::WindowMaximized)
+                    showNormal();
+                QQuickView::mouseMoveEvent(event);
+                return;
+            }
             QPoint pos = this->mapToGlobal(event->pos());
             XEvent event;
             memset(&event, 0, sizeof(XEvent));
 
-            Display *display = QX11Info::display();
             event.xclient.type = ClientMessage;
             event.xclient.message_type = XInternAtom(display, "_NET_WM_MOVERESIZE", False);
             event.xclient.display = display;

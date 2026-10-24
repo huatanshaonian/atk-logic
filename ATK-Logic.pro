@@ -73,6 +73,10 @@ SOURCES += \
         pv/usb/usb_server.cpp \
         pv/utils/qtlockedfile/qtlockedfile.cpp
 
+# QtLockedFile 的平台实现
+win32: SOURCES += pv/utils/qtlockedfile/qtlockedfile_win.cpp
+unix:  SOURCES += pv/utils/qtlockedfile/qtlockedfile_unix.cpp
+
 HEADERS += \
         lib/include/atk_decoder.h \
         pv/controller/session_error.h \
@@ -118,9 +122,46 @@ HEADERS += \
         pv/usb/usb_server.h \
         pv/utils/qtlockedfile/qtlockedfile.h
 
+# atk_decoder.h 所在目录（lib/include，见 README 源码环境说明）
+INCLUDEPATH += $$PWD/lib/include
+
 win32 {
         QMAKE_CXXFLAGS += /utf-8
         QMAKE_POST_LINK += xcopy /s /y \"$$SRC_DIR_DLL\" \"$$DST_DIR_DLL\"
+    }
+
+# QBreakpad 崩溃转储只在 Windows/MSVC 下启用
+win32-msvc* {
+        DEFINES += ATK_USE_QBREAKPAD
+    }
+
+# ---------------------------------------------------------------------------
+# Linux 构建（详见 linux/README.md，一键脚本 linux/build.sh）
+#   依赖: Qt 5.15 (quick/widgets/gui-private), libusb-1.0, libX11, libatk_decoder.so
+#   ATK_DECODER_DIR: libatk_decoder 安装前缀，内含 include/atk_decoder.h 与 lib/libatk_decoder.so
+#   可通过 qmake ATK_DECODER_DIR=/path 或同名环境变量指定，默认 $$PWD/build/decoder-install
+# ---------------------------------------------------------------------------
+unix:!macx {
+        isEmpty(ATK_DECODER_DIR): ATK_DECODER_DIR = $$(ATK_DECODER_DIR)
+        isEmpty(ATK_DECODER_DIR): ATK_DECODER_DIR = $$PWD/build/decoder-install
+        !exists($$ATK_DECODER_DIR/include/atk_decoder.h) {
+            warning("未找到 $$ATK_DECODER_DIR/include/atk_decoder.h，请先运行 linux/build.sh 或设置 ATK_DECODER_DIR")
+        }
+        INCLUDEPATH += $$ATK_DECODER_DIR/include
+        LIBS += -L$$ATK_DECODER_DIR/lib -latk_decoder
+
+        QT += x11extras
+        CONFIG += link_pkgconfig
+        PKGCONFIG += libusb-1.0 x11
+
+        # 运行时在程序目录的 lib/ 下查找 libatk_decoder.so
+        QMAKE_LFLAGS += "-Wl,-rpath,\'\$$ORIGIN/lib\'"
+
+        # 把解码器脚本、测试文件、手册以及 libatk_decoder.so 复制到程序目录
+        DESTDIR = $$OUT_PWD
+        QMAKE_POST_LINK += mkdir -p \"$$DESTDIR/lib\" && \
+            cp -rf \"$$PWD/runtime/.\" \"$$DESTDIR/\" && \
+            cp -af \"$$ATK_DECODER_DIR/lib/\"libatk_decoder.so* \"$$DESTDIR/lib/\"
     }
 
 RESOURCES += qml.qrc \

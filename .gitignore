@@ -1,0 +1,14 @@
+# 本地构建产物
+/build/
+/build-*/
+*.pro.user
+.qmake.stash
+
+# 运行解码器时 Python 3.8+ 生成的字节码（仓库里只保留原有的 cpython-36/37 文件）
+runtime/decoders/**/__pycache__/*.cpython-3[89]*.pyc
+runtime/decoders/**/__pycache__/*.cpython-31[0-9]*.pyc
+
+# Python API
+api/**/__pycache__/
+api/**/*.egg-info/
+api/.pytest_cache/

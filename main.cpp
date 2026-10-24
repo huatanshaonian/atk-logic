@@ -7,7 +7,9 @@
 #include <QTranslator>
 #include <QQuickWindow>
 #include <QFontDatabase>
+#ifdef ATK_USE_QBREAKPAD
 #include "QBreakpadHandler.h"
+#endif
 #include "./pv/controller/session_controller.h"
 #include "./pv/controller/session_error.h"
 #include "./pv/controller/setting.h"
@@ -68,6 +70,11 @@ int main(int argc, char* argv[])
     QApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
 #endif
 #endif
+#ifdef Q_OS_LINUX
+    // 无边框窗口的拖动依赖 X11，Wayland 会话下默认走 XWayland(xcb)
+    if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
+        qputenv("QT_QPA_PLATFORM", "xcb");
+#endif
     QApplication app(argc, argv);
     app.setApplicationVersion(APP_VERSION);
     app.setOrganizationName("ALIENTEK");
@@ -75,7 +82,7 @@ int main(int argc, char* argv[])
     app.setApplicationName("ATK-LogicView");
     app.setStyle(new MenuStyle());
     QString tempDir=QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-#if defined (QT_NO_DEBUG) && defined (Q_CC_MSVC)
+#if defined (QT_NO_DEBUG) && defined (ATK_USE_QBREAKPAD)
     QBreakpadInstance.setDumpPath(tempDir+"/crash");
 #endif
     //载入全局字体
@@ -160,10 +167,14 @@ int main(int argc, char* argv[])
     {
         QString tmp="AppVersion：";
         tmp+=APP_VERSION;
+#ifdef Q_OS_WIN
 #ifdef _WIN64
         tmp+=" x64";
 #else
         tmp+=" x86";
+#endif
+#else
+        tmp+=" "+QSysInfo::buildCpuArchitecture();
 #endif
         LogHelp::write(tmp);
 

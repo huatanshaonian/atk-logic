@@ -31,6 +31,30 @@ ATK-Logic软件的用户界面简洁直观，操作简单易学。它为用户�
 - qBreakpad v1.0
 
 
+Linux 版
+-----------------------
+
+源码可在 Linux 上编译运行（Ubuntu 24.04 / Qt 5.15 下验证），一键构建：
+
+```bash
+linux/build.sh --deps      # 安装依赖并构建，产物在 build/linux-release/
+sudo linux/install.sh      # 可选：安装到 /opt/ATK-Logic，并安装 USB 权限规则
+```
+
+详见 [linux/README.md](linux/README.md)。
+
+
+跨平台 Python API / 命令行 / Claude Code 技能
+-----------------------
+
+`api/` 目录提供不依赖上位机的 Python 接口和 `atk-logic` 命令行工具（Windows 与 Linux 通用），
+可采集、触发、输出 PWM、读取 `.atkdl` 工程文件、导出 VCD/CSV，并用 `runtime/decoders` 中的
+sigrok 解码器做协议解码，见 [api/README.md](api/README.md)。
+
+`.claude/skills/atk-logic/` 是基于该工具的 Claude Code 技能：在本仓库中启动 Claude Code 即可使用；
+如需在任意目录使用，把该目录复制到 `~/.claude/skills/`（Windows 为 `%USERPROFILE%\.claude\skills\`）。
+
+
 版权许可
 -----------------------
 
